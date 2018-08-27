@@ -216,8 +216,9 @@ Status EMPlanner::PlanOnReferenceLine(
 
   if (!ret.ok() || reference_line_info->speed_data().Empty()) {
     ADEBUG << "Speed fallback.";
-    GenerateFallbackSpeedProfile(reference_line_info,
-                                 reference_line_info->mutable_speed_data());
+
+    *reference_line_info->mutable_speed_data() =
+        GenerateFallbackSpeedProfile(*reference_line_info);
     reference_line_info->AddCost(kSpeedOptimizationFallbackClost);
   }
 
@@ -399,60 +400,38 @@ void EMPlanner::GenerateFallbackPathProfile(
   path_data->SetDiscretizedPath(DiscretizedPath(std::move(path_points)));
 }
 
-void EMPlanner::GenerateFallbackSpeedProfile(
-    const ReferenceLineInfo* reference_line_info, SpeedData* speed_data) {
-  *speed_data = GenerateStopProfileFromPolynomial(
-      reference_line_info->AdcPlanningPoint().v(),
-      reference_line_info->AdcPlanningPoint().a());
-
-  if (speed_data->Empty()) {
-    *speed_data =
-        GenerateStopProfile(reference_line_info->AdcPlanningPoint().v(),
-                            reference_line_info->AdcPlanningPoint().a());
+SpeedData EMPlanner::GenerateFallbackSpeedProfile(
+    const ReferenceLineInfo& reference_line_info) {
+  const double init_v = reference_line_info.AdcPlanningPoint().v();
+  const double init_a = reference_line_info.AdcPlanningPoint().a();
+  if (init_v > FLAGS_polynomial_speed_fallback_velocity) {
+    return GenerateStopProfileFromPolynomial(init_v, init_a);
+  } else {
+    return GenerateStopProfile(init_v, init_a);
   }
 }
 
 SpeedData EMPlanner::GenerateStopProfile(const double init_speed,
                                          const double init_acc) const {
-  AERROR << "Slowing down the car.";
+  AERROR << "Using fallback stopping profile: Slowing down the car!";
   SpeedData speed_data;
 
-  const double kFixedJerk = -1.0;
-  const double first_point_acc = std::fmin(0.0, init_acc);
-
-  const double max_t = 3.0;
-  const double unit_t = 0.02;
+  const double max_t = FLAGS_fallback_total_time;
+  const double unit_t = FLAGS_fallback_time_unit;
 
   double pre_s = 0.0;
-  const double t_mid =
-      (FLAGS_slowdown_profile_deceleration - first_point_acc) / kFixedJerk;
-  const double s_mid = init_speed * t_mid +
-                       0.5 * first_point_acc * t_mid * t_mid +
-                       1.0 / 6.0 * kFixedJerk * t_mid * t_mid * t_mid;
-  const double v_mid =
-      init_speed + first_point_acc * t_mid + 0.5 * kFixedJerk * t_mid * t_mid;
+  double pre_v = init_speed;
+  double acc = FLAGS_slowdown_profile_deceleration;
 
   for (double t = 0.0; t < max_t; t += unit_t) {
     double s = 0.0;
     double v = 0.0;
-    if (t <= t_mid) {
-      s = std::fmax(pre_s, init_speed * t + 0.5 * first_point_acc * t * t +
-                               1.0 / 6.0 * kFixedJerk * t * t * t);
-      v = std::fmax(
-          0.0, init_speed + first_point_acc * t + 0.5 * kFixedJerk * t * t);
-      const double a = first_point_acc + kFixedJerk * t;
-      speed_data.AppendSpeedPoint(s, t, v, a, 0.0);
-      pre_s = s;
-    } else {
-      s = std::fmax(pre_s, s_mid + v_mid * (t - t_mid) +
-                               0.5 * FLAGS_slowdown_profile_deceleration *
-                                   (t - t_mid) * (t - t_mid));
-      v = std::fmax(0.0,
-                    v_mid + (t - t_mid) * FLAGS_slowdown_profile_deceleration);
-      speed_data.AppendSpeedPoint(s, t, v, FLAGS_slowdown_profile_deceleration,
-                                  0.0);
-    }
+    s = std::fmax(pre_s,
+                  pre_s + 0.5 * (pre_v + (pre_v + unit_t * acc)) * unit_t);
+    v = std::fmax(0.0, pre_v + unit_t * acc);
+    speed_data.AppendSpeedPoint(s, t, v, acc, 0.0);
     pre_s = s;
+    pre_v = v;
   }
   return speed_data;
 }

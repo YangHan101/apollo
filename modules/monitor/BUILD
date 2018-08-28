@@ -20,6 +20,7 @@ cc_library(
         "//modules/monitor/software:process_monitor",
         "//modules/monitor/software:summary_monitor",
         "//modules/monitor/software:topic_monitor",
+        "@adv_plat//:adv_plat",
     ],
 )
 

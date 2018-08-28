@@ -26,7 +26,7 @@
 #include "modules/drivers/canbus/common/canbus_consts.h"
 #include "modules/drivers/canbus/proto/can_card_parameter.pb.h"
 
-#include "modules/drivers/canbus/can_client/hermes_can/bcan.h"
+#include "adv_plat/include/bcan.h"
 /**
  * @namespace apollo::drivers::canbus::can
  * @brief apollo::drivers::canbus::can

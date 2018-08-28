@@ -9,12 +9,12 @@ cc_library(
     ],
     hdrs = [
         "hermes_can_client.h",
-        "bcan.h",
-        "bcan_defs.h",
+#        "bcan.h",
+#        "bcan_defs.h",
     ],
     deps = [
         "//modules/drivers/canbus/can_client",
-        "//third_party/can_card_library/hermes_can",
+        "@adv_plat//:adv_plat",
     ],
 )
 

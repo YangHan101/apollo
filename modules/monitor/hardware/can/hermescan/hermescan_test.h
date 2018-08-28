@@ -35,12 +35,6 @@ namespace hw {
 /// A collection of details data about a given ESD-CAN interface.
 class HermesCanDetails : public ::apollo::monitor::HwCheckResultDetails {
  public:
-  // enum ValidMasks {
-  //   IF_STATUS = 0x1u,
-  //   STATS = 0x2u,
-  //   CTRL_STATE = 0x4u,
-  //   BITRATE = 0x8u
-  // };
 
   HermesCanDetails() : result(0), valid_flag(0) {}
 
@@ -63,6 +57,7 @@ class HermesCanDetails : public ::apollo::monitor::HwCheckResultDetails {
   /// Invalidates all fields.
   inline void invalidate() {
     // result = NTCAN_NET_NOT_FOUND;
+    result = 15;
     valid_flag = 0;
   }
 

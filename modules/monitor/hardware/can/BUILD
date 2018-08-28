@@ -12,6 +12,7 @@ cc_library(
         "//modules/drivers/canbus/proto:canbus_proto",
         "//modules/monitor/hardware:hardware_checker",
         "//modules/monitor/hardware/can/socketcan:socketcan_checker_lib",
+        "//modules/monitor/hardware/can/hermescan:hermescan_checker_lib",
     ] + select({
         "//tools/platforms:use_esd_can": [
             "//modules/monitor/hardware/can/esdcan:esdcan_checker_lib",

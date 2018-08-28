@@ -86,9 +86,9 @@ err:
   return ret;
 }
 
-// void EsdCanDetails::print_summary(std::ostream &os) {
-//   if (result == NTCAN_SUCCESS) {
-//     os << "ESD-CAN test PASSED, CAN bus statistics:\n"
+ void HermesCanDetails::print_summary(std::ostream &os) {
+   if (result == 0) {
+     os << "HERMES-CAN test PASSED, CAN bus statistics:\n"
 //        << "Rcv frames      : Std(Data/RTR): " << stats.rcv_count.std_data << "/"
 //        << stats.rcv_count.std_rtr
 //        << ", Ext(Data/RTR): " << stats.rcv_count.ext_data << "/"
@@ -108,21 +108,22 @@ err:
 //        << static_cast<int>(ctrl_state.xmit_err_counter) << std::endl
 //        << "Status          : " << std::hex
 //        << static_cast<int>(ctrl_state.status) << std::endl
-//        << "Rcv bits        : " << std::dec << stats.bit_count << std::endl;
-//   } else {
-//     os << "ESD-CAN test FAILED with error " << result << ": "
-//        << esdcan_err_to_str(result) << std::endl;
-//   }
-// }
-//
-// void EsdCanDetails::print_test_result(std::ostream &os) {
-//   if (result == NTCAN_SUCCESS) {
-//     os << "ESD-CAN test PASSED\n" << std::endl;
-//   } else {
-//     os << "ESD-CAN test FAILED with error " << result << ": "
-//        << esdcan_err_to_str(result) << std::endl;
-//   }
-// }
+//        << "Rcv bits        : " << std::dec << stats.bit_count 
+     << std::endl;
+   } else {
+     os << "ESD-CAN test FAILED with error " << result << ": "
+        << bcan_get_err_msg(result) << std::endl;
+   }
+ }
+
+ void HermesCanDetails::print_test_result(std::ostream &os) {
+   if (result == 0) {
+     os << "HERMES-CAN test PASSED\n" << std::endl;
+   } else {
+     os << "HERMES-CAN test FAILED with error " << result << ": "
+        << bcan_get_err_msg(result) << std::endl;
+   }
+ }
 
 }  // namespace hw
 }  // namespace monitor

@@ -24,6 +24,8 @@
 #include "modules/monitor/hardware/can/esdcan/esdcan_checker.h"
 #endif
 #include "modules/monitor/hardware/can/socketcan/socketcan_checker.h"
+#include "modules/monitor/hardware/can/hermescan/hermescan_checker.h"
+
 
 namespace apollo {
 namespace monitor {
@@ -39,6 +41,8 @@ void CanCheckerFactory::RegisterCanCheckers() {
 #endif
   Register(CANCardParameter::SOCKET_CAN_RAW,
            []() -> HwCheckerInterface* { return new hw::SocketCanChecker(); });
+  Register(CANCardParameter::HERMES_CAN,
+           []() -> HwCheckerInterface* { return new hw::HermesCanChecker(); });
 }
 
 std::unique_ptr<HwCheckerInterface> CanCheckerFactory::CreateCanChecker(

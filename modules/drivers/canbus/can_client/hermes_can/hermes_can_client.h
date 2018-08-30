@@ -105,6 +105,10 @@ class HermesCanClient : public CanClient {
    */
   void SetInited(bool init);
 
+  bcan_hdl_t GetDeviceHandler(){
+    return _dev_handler;
+  }
+
  private:
   bool _is_init;
   bcan_hdl_t _dev_handler;

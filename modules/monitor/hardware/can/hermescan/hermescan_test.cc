@@ -31,9 +31,11 @@ int HermesCanDetails::hermescan_do_test(int id) {
 
   invalidate();
 
-  ret = bcan_open(id, 0, 0, 0, &h0);
-  if (ret == 0) {
-    AINFO << "Successfully opened HERMES-CAN device " << id;
+  h0 = GetDeviceHandler();
+//  ret = bcan_open(id, 0, 0, 0, &h0);
+
+  if (h0) {
+    AINFO << "HERMES-CAN device successfully opened by can_client" << id;
 
     ret = bcan_get_status(h0);
     if (ret != 0) {
@@ -108,7 +110,7 @@ err:
 //        << static_cast<int>(ctrl_state.xmit_err_counter) << std::endl
 //        << "Status          : " << std::hex
 //        << static_cast<int>(ctrl_state.status) << std::endl
-//        << "Rcv bits        : " << std::dec << stats.bit_count 
+//        << "Rcv bits        : " << std::dec << stats.bit_count
      << std::endl;
    } else {
      os << "ESD-CAN test FAILED with error " << result << ": "

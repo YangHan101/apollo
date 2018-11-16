@@ -28,6 +28,10 @@ DEFINE_int32(planning_loop_rate, 10, "Loop rate for planning node");
 DEFINE_bool(enable_collision_detection, false,
             "enable collision detection in planning");
 
+DEFINE_string(lane_follow_scenario_config_file,
+              "modules/planning/conf/lane_follow_scenario_config.pb.txt",
+              "The lane follow scenario configuration file");
+
 DEFINE_string(planning_adapter_config_filename,
               "modules/planning/conf/adapter.conf",
               "The adapter configuration file");
@@ -266,7 +270,7 @@ DEFINE_bool(enable_follow_accel_constraint, true,
 DEFINE_bool(enable_sqp_solver, true, "True to enable SQP solver.");
 
 /// thread pool
-DEFINE_uint32(max_planning_thread_pool_size, 5,
+DEFINE_uint32(max_planning_thread_pool_size, 15,
               "num of thread used in planning thread pool.");
 DEFINE_bool(use_multi_thread_to_add_obstacles, false,
             "use multiple thread to add obstacles.");
@@ -370,3 +374,9 @@ DEFINE_double(polynomial_speed_fallback_velocity, 3.5,
 // navigation mode
 DEFINE_double(navigation_fallback_cruise_time, 8.0,
               "The time range of fallback cruise under navigation mode.");
+
+DEFINE_bool(enable_stitch_last_trajectory, true,
+            "To control whether to stitch last trajectory or not.");
+
+DEFINE_bool(enable_planning_pad_msg, false,
+            "To control whether to enable planning pad message.");

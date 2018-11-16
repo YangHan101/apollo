@@ -34,10 +34,10 @@
 #include "modules/common/util/factory.h"
 #include "modules/planning/common/reference_line_info.h"
 #include "modules/planning/math/curve1d/quintic_polynomial_curve1d.h"
+#include "modules/planning/navi/decider/navi_task.h"
 #include "modules/planning/planner/planner.h"
 #include "modules/planning/reference_line/reference_line.h"
 #include "modules/planning/reference_line/reference_point.h"
-#include "modules/planning/tasks/task.h"
 
 /**
  * @namespace apollo::planning
@@ -55,11 +55,13 @@ namespace planning {
  * mode by setting "FLAGS_use_navigation_mode" to "true") and do not use it in
  * standard mode.
  */
-class NaviPlanner : public Planner {
+class NaviPlanner : public PlannerWithReferenceLine {
  public:
   NaviPlanner() = default;
 
   virtual ~NaviPlanner() = default;
+
+  std::string Name() override { return "NAVI"; }
 
   common::Status Init(const PlanningConfig& config) override;
 
@@ -98,8 +100,7 @@ class NaviPlanner : public Planner {
   void GenerateFallbackPathProfile(const ReferenceLineInfo* reference_line_info,
                                    PathData* path_data);
 
-  void GenerateFallbackSpeedProfile(
-      const ReferenceLineInfo* reference_line_info, SpeedData* speed_data);
+  void GenerateFallbackSpeedProfile(SpeedData* speed_data);
 
   SpeedData GenerateStopProfile(const double init_speed,
                                 const double init_acc) const;
@@ -115,8 +116,8 @@ class NaviPlanner : public Planner {
                        const std::string& name, const double time_diff_ms);
 
  private:
-  apollo::common::util::Factory<TaskType, Task> task_factory_;
-  std::vector<std::unique_ptr<Task>> tasks_;
+  apollo::common::util::Factory<TaskType, NaviTask> task_factory_;
+  std::vector<std::unique_ptr<NaviTask>> tasks_;
 };
 
 }  // namespace planning

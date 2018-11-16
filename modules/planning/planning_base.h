@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "ctpl/ctpl_stl.h"
+
 #include "modules/common/proto/pnc_point.pb.h"
 #include "modules/planning/proto/planning.pb.h"
 #include "modules/planning/proto/planning_config.pb.h"
@@ -30,20 +32,10 @@
 #include "modules/common/adapters/adapter_manager.h"
 #include "modules/common/apollo_app.h"
 #include "modules/common/status/status.h"
-#include "modules/common/util/factory.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
-#include "modules/planning/common/frame.h"
 #include "modules/planning/common/trajectory/publishable_trajectory.h"
 #include "modules/planning/planner/planner.h"
-
-#define CHECK_ADAPTER(NAME)                                               \
-  if (AdapterManager::Get##NAME() == nullptr) {                           \
-    AERROR << #NAME << " is not registered";                              \
-    return Status(ErrorCode::PLANNING_ERROR, #NAME " is not registered"); \
-  }
-
-#define CHECK_ADAPTER_IF(CONDITION, NAME) \
-  if (CONDITION) CHECK_ADAPTER(NAME)
+#include "modules/planning/planner/planner_dispatcher.h"
 
 /**
  * @namespace apollo::planning
@@ -67,6 +59,14 @@ class PlanningBase : public apollo::common::ApolloApp {
   // Watch dog timer
   virtual void OnTimer(const ros::TimerEvent&) = 0;
 
+  /**
+   * @brief Plan the trajectory given current vehicle state
+   */
+  virtual apollo::common::Status Plan(
+      const double current_time_stamp,
+      const std::vector<common::TrajectoryPoint>& stitching_trajectory,
+      ADCTrajectory* trajectory) = 0;
+
  protected:
   void PublishPlanningPb(ADCTrajectory* trajectory_pb, double timestamp);
 
@@ -79,47 +79,19 @@ class PlanningBase : public apollo::common::ApolloApp {
     AdapterManager::PublishPlanning(*trajectory);
   }
 
-  void RegisterPlanners();
-
-  /**
-   * @brief Plan the trajectory given current vehicle state
-   */
-  common::Status Plan(
-      const double current_time_stamp,
-      const std::vector<common::TrajectoryPoint>& stitching_trajectory,
-      ADCTrajectory* trajectory);
-
-  common::Status InitFrame(const uint32_t sequence_num,
-                           const common::TrajectoryPoint& planning_start_point,
-                           const double start_time,
-                           const common::VehicleState& vehicle_state);
-
   bool IsVehicleStateValid(const common::VehicleState& vehicle_state);
-  void ExportReferenceLineDebug(planning_internal::Debug* debug);
-
   virtual void SetFallbackTrajectory(ADCTrajectory* cruise_trajectory);
+  virtual bool CheckPlanningConfig() = 0;
 
-  void CheckPlanningConfig();
-
+ protected:
   double start_time_ = 0.0;
-
-  common::util::Factory<PlanningConfig::PlannerType, Planner> planner_factory_;
-
   PlanningConfig config_;
-
   TrafficRuleConfigs traffic_rule_configs_;
-
   const hdmap::HDMap* hdmap_ = nullptr;
-
-  std::unique_ptr<Frame> frame_;
-
   std::unique_ptr<Planner> planner_;
-
   std::unique_ptr<PublishableTrajectory> last_publishable_trajectory_;
-
-  std::unique_ptr<ReferenceLineProvider> reference_line_provider_;
-
   ros::Timer timer_;
+  std::unique_ptr<PlannerDispatcher> planner_dispatcher_;
 };
 
 }  // namespace planning

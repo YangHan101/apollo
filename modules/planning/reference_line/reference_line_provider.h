@@ -43,10 +43,10 @@
 #include "modules/map/pnc_map/pnc_map.h"
 #include "modules/planning/common/indexed_queue.h"
 #include "modules/planning/math/smoothing_spline/spline_2d_solver.h"
+#include "modules/planning/reference_line/cos_theta_reference_line_smoother.h"
 #include "modules/planning/reference_line/qp_spline_reference_line_smoother.h"
 #include "modules/planning/reference_line/reference_line.h"
 #include "modules/planning/reference_line/spiral_reference_line_smoother.h"
-#include "modules/planning/reference_line/cos_theta_reference_line_smoother.h"
 
 /**
  * @namespace apollo::planning
@@ -62,12 +62,13 @@ namespace planning {
  */
 class ReferenceLineProvider {
  public:
+  ReferenceLineProvider() = default;
+  explicit ReferenceLineProvider(const hdmap::HDMap* base_map);
+
   /**
    * @brief Default destructor.
    */
   ~ReferenceLineProvider();
-
-  explicit ReferenceLineProvider(const hdmap::HDMap* base_map);
 
   bool UpdateRoutingResponse(const routing::RoutingResponse& routing);
 
@@ -138,7 +139,7 @@ class ReferenceLineProvider {
 
   bool GetReferenceLinesFromRelativeMap(
       const relative_map::MapMsg& relative_map,
-      std::list<ReferenceLine>* reference_line,
+      std::list<ReferenceLine>* reference_lines,
       std::list<hdmap::RouteSegments>* segments);
 
   /**

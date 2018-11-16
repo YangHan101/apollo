@@ -17,8 +17,13 @@
 #ifndef MODULES_PLANNING_STD_PLANNING_H_
 #define MODULES_PLANNING_STD_PLANNING_H_
 
+#include <memory>
 #include <string>
+#include <vector>
 
+#include "modules/common/util/thread_pool.h"
+#include "modules/planning/common/frame.h"
+#include "modules/planning/planner/std_planner_dispatcher.h"
 #include "modules/planning/planning_base.h"
 
 /**
@@ -36,11 +41,13 @@ namespace planning {
  */
 class StdPlanning : public PlanningBase {
  public:
-  StdPlanning() = default;
+  StdPlanning() {
+    planner_dispatcher_ = std::make_unique<StdPlannerDispatcher>();
+  }
   virtual ~StdPlanning();
+
   /**
-   * @brief module name
-   * @return module name
+   * @brief Planning algorithm name.
    */
   std::string Name() const override;
 
@@ -69,8 +76,23 @@ class StdPlanning : public PlanningBase {
 
   void OnTimer(const ros::TimerEvent&) override;
 
+  apollo::common::Status Plan(
+      const double current_time_stamp,
+      const std::vector<common::TrajectoryPoint>& stitching_trajectory,
+      ADCTrajectory* trajectory) override;
+
+ private:
+  common::Status InitFrame(const uint32_t sequence_num,
+                           const common::TrajectoryPoint& planning_start_point,
+                           const double start_time,
+                           const common::VehicleState& vehicle_state);
+  void ExportReferenceLineDebug(planning_internal::Debug* debug);
+  bool CheckPlanningConfig();
+
  private:
   routing::RoutingResponse last_routing_;
+  std::unique_ptr<Frame> frame_;
+  std::unique_ptr<ReferenceLineProvider> reference_line_provider_;
 };
 
 }  // namespace planning

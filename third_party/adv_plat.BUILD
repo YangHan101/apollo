@@ -5,7 +5,6 @@ licenses(["notice"])
 cc_library(
     name = "adv_plat",
     srcs = [
-        "lib/libadv_trigger.a",
         "lib/libadv_bcan.a",
     ],
     hdrs = [

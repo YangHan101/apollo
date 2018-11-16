@@ -17,8 +17,16 @@
 #ifndef MODULES_PLANNING_NAVI_PLANNING_H_
 #define MODULES_PLANNING_NAVI_PLANNING_H_
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "modules/planning/proto/pad_msg.pb.h"
+
+#include "modules/planning/common/frame.h"
+#include "modules/planning/planner/navi_planner_dispatcher.h"
+#include "modules/planning/planner/planner_dispatcher.h"
 #include "modules/planning/planning_base.h"
 
 /**
@@ -36,11 +44,13 @@ namespace planning {
  */
 class NaviPlanning : public PlanningBase {
  public:
-  NaviPlanning() = default;
+  NaviPlanning() {
+    planner_dispatcher_ = std::make_unique<NaviPlannerDispatcher>();
+  }
   virtual ~NaviPlanning();
+
   /**
-   * @brief module name
-   * @return module name
+   * @brief Planning algorithm name.
    */
   std::string Name() const override;
 
@@ -69,8 +79,55 @@ class NaviPlanning : public PlanningBase {
 
   void OnTimer(const ros::TimerEvent&) override;
 
+  apollo::common::Status Plan(
+      const double current_time_stamp,
+      const std::vector<common::TrajectoryPoint>& stitching_trajectory,
+      ADCTrajectory* trajectory) override;
+
  private:
+  common::Status InitFrame(const uint32_t sequence_num,
+                           const common::TrajectoryPoint& planning_start_point,
+                           const double start_time,
+                           const common::VehicleState& vehicle_state);
+
+  bool CheckPlanningConfig();
+
+  /**
+   * @brief receiving planning pad message
+   */
+  void OnPad(const PadMessage& pad);
+
+  /**
+   * @brief make driving decisions by received planning pad msg
+   */
+  void ProcessPadMsg(DrivingAction drvie_action);
+
+  /**
+   * @brief get the lane Id of the lane in which the vehicle is located
+   */
+  std::string GetCurrentLaneId();
+
+  /**
+   * @brief get the left neighbors lane info of the lane which the vehicle is
+   *located
+   * @lane_info_group output left neighors info which sorted from near to
+   *far
+   */
+  void GetLeftNeighborLanesInfo(
+      std::vector<std::pair<std::string, double>>* const lane_info_group);
+
+  /**
+   * @brief get the right neighbors lane of the lane which the vehicle is
+   * located
+   * @lane_info_group output right neighors info which sorted from near to
+   *far
+   */
+  void GetRightNeighborLanesInfo(
+      std::vector<std::pair<std::string, double>>* const lane_info_group);
+
   void SetFallbackTrajectory(ADCTrajectory* cruise_trajectory) override;
+
+  void ExportReferenceLineDebug(planning_internal::Debug* debug);
 
   class VehicleConfig {
    public:
@@ -83,6 +140,16 @@ class NaviPlanning : public PlanningBase {
 
   VehicleConfig ComputeVehicleConfigFromLocalization(
       const localization::LocalizationEstimate& localization) const;
+
+  std::string target_lane_id_;
+  DrivingAction driving_action_;
+  bool is_received_pad_msg_ = false;
+
+  std::unique_ptr<Frame> frame_;
+
+  std::unique_ptr<ReferenceLineProvider> reference_line_provider_;
+
+  std::unique_ptr<PlannerDispatcher> planner_dispatcher_;
 };
 
 }  // namespace planning

@@ -23,6 +23,9 @@ DECLARE_bool(planning_test_mode);
 DECLARE_double(test_duration);
 
 DECLARE_string(planning_config_file);
+
+DECLARE_string(lane_follow_scenario_config_file);
+
 DECLARE_string(planning_adapter_config_filename);
 DECLARE_string(traffic_rule_config_filename);
 DECLARE_string(smoother_config_filename);
@@ -200,5 +203,9 @@ DECLARE_double(polynomial_speed_fallback_velocity);
 
 // navigation mode
 DECLARE_double(navigation_fallback_cruise_time);
+
+// control whether to stitch last trajectory to current plan trajectory
+DECLARE_bool(enable_stitch_last_trajectory);
+DECLARE_bool(enable_planning_pad_msg);
 
 #endif  // MODULES_PLANNING_COMMON_PLANNING_GFLAGS_H_
